@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: currency_product_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "currency_product_db", "-U", "admin"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+  
+  product_service:
+    build:
+      context: ./product_service
+    environment:
+      DATABASE_URL: postgresql://admin:admin@db:5432/currency_product_db
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  currency_service:
+    build:
+      context: ./currency_service
+    environment:
+      DATABASE_URL: postgresql://admin:admin@db:5432/currency_product_db
+      PRODUCT_SERVICE_URL: http://product_service:5000
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+
+volumes:
+  db_data:

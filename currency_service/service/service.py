@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 import requests
-from flask import Flask, jsonify
+from flask import jsonify
 
 from currency_service.entities.entities import Currency
 
 
 class CurrenciesService:
     _currencies = {}
-    _url = "https://economia.awesomeapi.com.br/all"
+    _url = ""
     _timeToExpire: int = 5
     LastUpdate = None
 
@@ -45,26 +45,3 @@ class CurrenciesService:
             return self._currencies[code.upper()]
 
         return None
-
-
-app = Flask(__name__)
-app.config["URL"] = "https://economia.awesomeapi.com.br/all"
-app.config["TIME_TO_EXPIRE"] = 5
-service = CurrenciesService(url=app.config.get("URL"), timeToExpire=app.config.get("TIME_TO_EXPIRE"))
-
-
-@app.route('/currencies', methods=['GET'])
-def get_all_currencies():
-    return service.Get()
-
-
-@app.route('/currency/<code>', methods=['GET'])
-def get_currency_by_code(code):
-    currency = service.GetByCode(code)
-    if currency is None:
-        return f"Currency {code} not found", 404
-    return jsonify(currency.to_dict())
-
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080)
